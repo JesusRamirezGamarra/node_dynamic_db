@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  mongo:
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongo.json:data/data.json:ro
+      - ./script/initdb.sh:/docker-entrypoint-initdb.d/init-mongo.sh:ro
+    mongo-worker:
+      image: mongo
+      container_name: db_mongo_worker 
+      dependes_on:
+        - mongo
+      entrypoint: ["bash" , "/docker-entrypoint-initdb.d/init-mongo.sh"]
+
+      environment:
+        MONGO_INITDB_DATABASE: "database"
+      volumes:
+        - ./data/mongo.json:/data/data.json:ro
+        - ./script/initdb.sh:/docker-entrypoint-initdb.d/init-mongo.sh:ro
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MY_DATABASE_DRIVER: "mongo"
+      DB_HOST: db
+      DB_PORT: 27017
+    depends_on:
+      - db
+    ports:
+      - 8081:3000
+    restart: always

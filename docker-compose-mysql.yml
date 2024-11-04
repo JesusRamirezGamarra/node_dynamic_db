@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: db_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpwd
+      MYSQL_DATABASE: database
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql_data.sql:/docker-entrypoint-initdb.d/data.sql
+    networks:
+      - my_network      
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MY_DATABASE_DRIVER: "mysql"
+      DB_HOST: db
+      DB_USER_NAME: root
+      DB_PASSWORD: rootpwd
+      DB_PORT: 3306
+      DB_NAME: database
+      
+    depends_on:
+      - db
+    ports:
+      - "8081:3000"
+    restart: always
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
